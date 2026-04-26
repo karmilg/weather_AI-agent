@@ -23,7 +23,7 @@ type DB struct {
 
 func NewDB(ctx context.Context, cfg ConfigDB) (*DB, error) {
 	conn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=require",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name,
 	)
 
