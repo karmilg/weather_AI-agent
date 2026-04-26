@@ -18,7 +18,7 @@ COPY --from=builder /app/weather-bot .
 
 COPY --from=builder /app/migrations ./migrations
 
-COPY .env .
+#COPY .env .
 
 EXPOSE 8080
 
