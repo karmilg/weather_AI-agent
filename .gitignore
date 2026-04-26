@@ -1,0 +1,11 @@
+.env
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+postgres_data/
+ollama_data/

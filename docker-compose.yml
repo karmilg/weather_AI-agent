@@ -1,0 +1,67 @@
+services:
+  # База данных PostgreSQL
+  postgres:
+    image: postgres:18-bookworm
+    container_name: weather_postgres
+    env_file:
+      - .env 
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql 
+      - ./migrations:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - weather_network
+
+  bot:
+    build: .
+    container_name: weather_bot
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      WEATHER_API_KEY: ${WEATHER_API_KEY}
+      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+      OLLAMA_URL: ${OLLAMA_URL}
+      LLM_MODEL: ${LLM_MODEL}
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - weather_network
+  
+  ollama:
+    image: ollama/ollama:0.21.3-rc0-rocm
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    env_file:
+      - .env
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - weather_network
+
+networks:
+  weather_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  ollama_data:
