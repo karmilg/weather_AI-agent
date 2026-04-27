@@ -17,24 +17,31 @@ type Config struct {
 	DBPassword    string
 	DBName        string
 	TelegramToken string
+	DatabaseURL string
 }
 
 func Load() *Config {
-	if err := godotenv.Load(); err != nil {
-		log.Println("файл .env не найден")
-	}
+	_ = godotenv.Load() 
 
-	return &Config{
+	databaseURL := os.Getenv("DATABASE_URL")
+
+	cfg := &Config{
 		WeatherAPIKey: getEnv("WEATHER_API_KEY"),
 		OllamaURL: getEnv("OLLAMA_URL"),
 		LLMModel: getEnv("LLM_MODEL"),
-		DBHost: getEnv("DB_HOST"),
-		DBPort: getEnv("DB_PORT"),
-		DBUser: getEnv("DB_USER"),
-		DBPassword: getEnv("DB_PASSWORD"),
-		DBName: getEnv("DB_NAME"),
+		DatabaseURL: databaseURL,
 		TelegramToken: getEnv("TELEGRAM_TOKEN"),
 	}
+
+	if databaseURL == "" {
+		cfg.DBHost = getEnv("DB_HOST")
+		cfg.DBPort = getEnv("DB_PORT")
+		cfg.DBUser = getEnv("DB_USER")
+		cfg.DBPassword = getEnv("DB_PASSWORD")
+		cfg.DBName = getEnv("DB_NAME")
+	}
+
+	return cfg
 }
 
 func getEnv(key string) string {

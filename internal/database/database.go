@@ -4,46 +4,56 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/karmilg/weather_AI-agent/config"
 )
-
-type ConfigDB struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	Name     string
-}
 
 type DB struct {
 	Pool *pgxpool.Pool
 	Ctx  context.Context
 }
 
-func NewDB(ctx context.Context, cfg ConfigDB) (*DB, error) {
-	conn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=require",
-		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name,
-	)
+func NewDB(ctx context.Context, cfg *config.Config) (*DB, error) {
+	var connString string
 
-	config, err := pgxpool.ParseConfig(conn)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка парсинга конфига: %w", err)
+	if cfg.DatabaseURL != "" {
+		connString = cfg.DatabaseURL
+
+		if !strings.Contains(connString, "sslmode=") {
+			if strings.Contains(connString, "?") {
+				connString += "&sslmode=require"
+			} else {
+				connString += "?sslmode=require"
+			}
+		}
+	} else {
+		connString = fmt.Sprintf(
+			"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+			cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName,
+		)
 	}
 
-	pool, err := pgxpool.NewWithConfig(ctx, config)
+	poolConfig, err := pgxpool.ParseConfig(connString)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка подключения: %w", err)
+		return nil, fmt.Errorf("ошибка парсинга DATABASE_URL: %w", err)
+	}
+
+	poolConfig.MaxConns = 25
+	poolConfig.MinConns = 2
+	poolConfig.MaxConnLifetime = 30 * 60
+	poolConfig.MaxConnIdleTime = 5 * 60
+
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка создания пула: %w", err)
 	}
 
 	if err := pool.Ping(ctx); err != nil {
 		return nil, fmt.Errorf("База данных не отвечает: %w", err)
 	}
 
-	log.Println("База данных успешно подключена!")
-	return &DB{
-		Pool: pool,
-		Ctx:  ctx,
-	}, nil
+	log.Println("✅ База данных успешно подключена! (pgxpool)")
+	return &DB{Pool: pool, Ctx: ctx}, nil
 }

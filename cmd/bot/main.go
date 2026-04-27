@@ -24,13 +24,7 @@ func main() {
 		log.Fatal("❌ WEATHER_API_KEY не задан")
 	}
 
-	db, err := database.NewDB(context.Background(), database.ConfigDB{
-		Host:     cfg.DBHost,
-		Port:     cfg.DBPort,
-		User:     cfg.DBUser,
-		Password: cfg.DBPassword,
-		Name:     cfg.DBName,
-	})
+	db, err := database.NewDB(context.Background(), cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
