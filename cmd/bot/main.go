@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
+	"os"
 
 	"github.com/karmilg/weather_AI-agent/config"
 	"github.com/karmilg/weather_AI-agent/internal/agent"
@@ -16,6 +18,21 @@ import (
 
 func main() {
 	cfg := config.Load()
+
+	go func() {
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "8080"
+		}
+
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("OK"))
+		})
+
+		log.Println("HTTP server started on port", port)
+		http.ListenAndServe(":"+port, nil)
+	}()
+
 	if cfg.TelegramToken == "" {
 		log.Fatal("❌ TELEGRAM_TOKEN не задан")
 	}
@@ -47,7 +64,7 @@ func main() {
 	scheduler := scheduler.NewScheduler(db, bot)
 	scheduler.Start()
 	log.Println("🚀 Бот запущен")
-    if err := bot.Start(); err != nil {
-        log.Fatal(err)
-    }
+	if err := bot.Start(); err != nil {
+		log.Fatal(err)
+	}
 }
