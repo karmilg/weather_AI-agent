@@ -21,6 +21,4 @@ COPY --from=builder /app/migrations ./migrations
 #COPY .env .
 
 EXPOSE 8080
-
-# Запускаем бота
 CMD ["./weather-bot"]
