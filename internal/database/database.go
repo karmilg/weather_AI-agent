@@ -16,6 +16,8 @@ type DB struct {
 }
 
 func NewDB(ctx context.Context, cfg *config.Config) (*DB, error) {
+	log.Printf("DEBUG: DatabaseURL = '%s'", cfg.DatabaseURL)
+	log.Printf("DEBUG: DBHost = '%s'", cfg.DBHost)
 	var connString string
 
 	if cfg.DatabaseURL != "" {
